@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vendor Onboarding Gate</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #222222;
+      --border: #2e2e2e; --border-active: #444;
+      --text: #e8e8e8; --text-muted: #777; --text-dim: #444;
+      --accent: #c8f135; --accent-dim: rgba(200,241,53,0.08); --accent-glow: rgba(200,241,53,0.15);
+      --denied: #ff4d4d; --denied-dim: rgba(255,77,77,0.08);
+      --flagged: #f59e0b; --flagged-dim: rgba(245,158,11,0.08);
+      --analyst: #4ade80; --analyst-dim: rgba(74,222,128,0.08);
+      --error: #ff6b6b; --error-dim: rgba(255,107,107,0.08);
+      --mono: 'IBM Plex Mono', monospace; --sans: 'IBM Plex Sans', sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(200,241,53,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(200,241,53,0.03) 1px, transparent 1px);
+      background-size: 40px 40px; pointer-events: none; z-index: 0;
+    }
+    .container { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 60px 24px 80px; }
+
+    /* Header */
+    .header { margin-bottom: 40px; animation: fadeDown 0.6s ease both; }
+    .header-tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .header-tag::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.8); } }
+    h1 { font-family: var(--mono); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 10px; }
+    .header-sub { font-size: 13px; color: var(--text-muted); font-weight: 300; max-width: 540px; }
+
+    /* Pipeline */
+    .pipeline { display: flex; align-items: stretch; margin-bottom: 32px; animation: fadeDown 0.6s 0.05s ease both; }
+    .pipeline-stage { flex: 1; background: var(--surface); border: 1px solid var(--border); padding: 14px 16px; }
+    .pipeline-stage + .pipeline-stage { border-left: none; }
+    .pipeline-stage-num { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+    .pipeline-stage-name { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--accent); }
+    .pipeline-stage-desc { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .pipeline-arrow { display: flex; align-items: center; padding: 0 6px; color: var(--text-dim); font-size: 14px; }
+
+    /* Rules */
+    .rules-legend { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 16px 20px; margin-bottom: 32px; animation: fadeDown 0.6s 0.1s ease both; }
+    .rules-legend-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+    @media (max-width: 540px) { .rules-grid { grid-template-columns: 1fr; } }
+    .rule-item { font-family: var(--mono); font-size: 11px; color: var(--text-muted); display: flex; gap: 8px; align-items: flex-start; }
+    .rule-code { flex-shrink: 0; min-width: 22px; }
+    .rule-code.r-deny { color: var(--denied); }
+    .rule-code.r-flag { color: var(--flagged); }
+    .rule-code.r-pass { color: var(--analyst); }
+
+    /* Form */
+    .form-card { background: var(--surface); border: 1px solid var(--border); padding: 32px; animation: fadeDown 0.6s 0.2s ease both; }
+    .section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .form-group { margin-bottom: 20px; }
+    .form-group:last-of-type { margin-bottom: 0; }
+    label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.02em; }
+    label span.required { color: var(--accent); margin-left: 3px; }
+    input[type="text"], input[type="date"] {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      font-family: var(--mono); font-size: 13px; padding: 10px 14px; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none; appearance: none; border-radius: 0;
+    }
+    input[type="text"]:focus, input[type="date"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.4); cursor: pointer; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 520px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* File upload */
+    .file-upload-wrapper { position: relative; }
+    .file-upload-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 2; }
+    .file-upload-display {
+      background: var(--bg); border: 1px dashed var(--border-active); padding: 11px 13px;
+      display: flex; align-items: center; gap: 10px; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s; min-height: 52px;
+    }
+    .file-upload-display:hover { border-color: var(--accent); background: var(--accent-dim); }
+    .file-upload-display.scanning { border-color: var(--flagged); border-style: solid; background: var(--flagged-dim); animation: blink 1.2s ease infinite; }
+    .file-upload-display.scan-pass { border-color: var(--analyst); border-style: solid; background: var(--analyst-dim); }
+    .file-upload-display.scan-fail { border-color: var(--denied); border-style: solid; background: var(--denied-dim); }
+    .file-upload-display.scan-warn { border-color: var(--flagged); border-style: solid; background: var(--flagged-dim); }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.65} }
+    .file-icon { font-size: 15px; flex-shrink: 0; }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name-text { font-family: var(--mono); font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-placeholder-text { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+
+    /* Confidence badge */
+    .confidence-badge { display: none; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+    .confidence-badge.visible { display: flex; }
+    .conf-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+    .conf-value { font-family: var(--mono); font-size: 14px; font-weight: 600; line-height: 1; }
+    .conf-value.pass { color: var(--analyst); }
+    .conf-value.warn { color: var(--flagged); }
+    .conf-value.fail { color: var(--denied); }
+    .conf-pill { font-family: var(--mono); font-size: 9px; padding: 2px 5px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .conf-pill.pass { background: rgba(74,222,128,0.12); color: var(--analyst); }
+    .conf-pill.warn { background: rgba(245,158,11,0.12); color: var(--flagged); }
+    .conf-pill.fail { background: rgba(255,77,77,0.12); color: var(--denied); }
+
+    /* Scan status */
+    .scan-status { font-family: var(--mono); font-size: 11px; margin-top: 5px; min-height: 18px; display: flex; align-items: center; gap: 6px; }
+    .scan-spinner { width: 10px; height: 10px; border: 1.5px solid var(--flagged); border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Submit button */
+    .submit-btn {
+      width: 100%; margin-top: 28px; background: var(--accent); color: #0f0f0f;
+      border: none; font-family: var(--mono); font-size: 13px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase; padding: 14px 24px;
+      cursor: pointer; transition: background 0.2s, box-shadow 0.2s; position: relative; overflow: hidden;
+    }
+    .submit-btn:hover { background: #d4f74a; box-shadow: 0 0 24px var(--accent-glow); }
+    .submit-btn:active { transform: scale(0.99); }
+    .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .submit-btn.loading { background: var(--surface2); color: var(--text-muted); cursor: not-allowed; }
+    .loading-bar { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--accent); animation: loadbar 1.8s ease infinite; }
+    @keyframes loadbar { 0%{width:0;left:0} 50%{width:100%;left:0} 100%{width:0;left:100%} }
+
+    /* Result */
+    .result { margin-top: 24px; border: 1px solid var(--border); overflow: hidden; display: none; animation: slideUp 0.4s ease both; }
+    .result.visible { display: block; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .result-header { padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .result-header.denied { background: var(--denied-dim); border-bottom: 1px solid rgba(255,77,77,0.2); }
+    .result-header.flagged { background: var(--flagged-dim); border-bottom: 1px solid rgba(245,158,11,0.2); }
+    .result-header.analyst { background: var(--analyst-dim); border-bottom: 1px solid rgba(74,222,128,0.2); }
+    .result-header.validation-error { background: var(--error-dim); border-bottom: 1px solid rgba(255,107,107,0.2); }
+    .result-status { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+    .result-status.denied { color: var(--denied); }
+    .result-status.flagged { color: var(--flagged); }
+    .result-status.analyst { color: var(--analyst); }
+    .result-status.validation-error { color: var(--error); }
+    .result-badge { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; padding: 3px 8px; text-transform: uppercase; }
+    .result-badge.denied { background: rgba(255,77,77,0.15); color: var(--denied); }
+    .result-badge.flagged { background: rgba(245,158,11,0.15); color: var(--flagged); }
+    .result-badge.analyst { background: rgba(74,222,128,0.15); color: var(--analyst); }
+    .result-badge.validation-error { background: rgba(255,107,107,0.15); color: var(--error); }
+    .result-body { padding: 20px 24px; background: var(--surface2); }
+
+    /* Stage breakdown cards */
+    .stage-breakdown { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    @media (max-width: 520px) { .stage-breakdown { grid-template-columns: 1fr; } }
+    .stage-card { background: var(--bg); border: 1px solid var(--border); padding: 12px 14px; }
+    .stage-card-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; }
+    .stage-card-value { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+    .stage-card-value.pass { color: var(--analyst); }
+    .stage-card-value.warn { color: var(--flagged); }
+    .stage-card-value.fail { color: var(--denied); }
+    .stage-card-detail { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+    .result-rule { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 16px; padding: 8px 12px; background: var(--bg); border-left: 2px solid var(--border-active); }
+    .result-rule strong { color: var(--text); }
+    .result-message-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+    .result-message { font-size: 13px; color: var(--text); line-height: 1.7; white-space: pre-line; }
+
+    input.field-error { border-color: var(--error) !important; }
+    .field-error-msg { font-family: var(--mono); font-size: 11px; color: var(--error); margin-top: 5px; min-height: 16px; }
+    .reset-btn { margin-top: 16px; background: transparent; border: 1px solid var(--border); color: var(--text-muted); font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 16px; cursor: pointer; transition: border-color 0.2s, color 0.2s; width: 100%; }
+    .reset-btn:hover { border-color: var(--text-muted); color: var(--text); }
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+    .footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.06em; display: flex; justify-content: space-between; animation: fadeDown 0.6s 0.4s ease both; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header class="header">
+    <div class="header-tag">Cybersecurity Risk Team</div>
+    <h1>Vendor Onboarding Gate</h1>
+    <p class="header-sub">Two-stage automated screening. Stage 1 checks document dates against today's date using deterministic rules. Stage 2 uses ML to verify document identity.</p>
+  </header>
+
+  <div class="pipeline">
+    <div class="pipeline-stage">
+      <div class="pipeline-stage-num">Stage 1</div>
+      <div class="pipeline-stage-name">Rules Engine</div>
+      <div class="pipeline-stage-desc">Expiry &amp; recency checks</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage">
+      <div class="pipeline-stage-num">Stage 2</div>
+      <div class="pipeline-stage-name">ML Classifier</div>
+      <div class="pipeline-stage-desc">Document identity verification</div>
+    </div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-stage">
+      <div class="pipeline-stage-num">Output</div>
+      <div class="pipeline-stage-name">Decision</div>
+      <div class="pipeline-stage-desc">Denied / Flagged / Analyst</div>
+    </div>
+  </div>
+
+  <div class="rules-legend">
+    <div class="rules-legend-title">Active Rules — All stages must pass</div>
+    <div class="rules-grid">
+      <div class="rule-item"><span class="rule-code r-deny">R1</span><span>ISO 27001 cert expired before submission → DENIED</span></div>
+      <div class="rule-item"><span class="rule-code r-deny">R2</span><span>SIG questionnaire older than 12 months → DENIED</span></div>
+      <div class="rule-item"><span class="rule-code r-flag">R3</span><span>SIG file not classified as SIG questionnaire → FLAGGED</span></div>
+      <div class="rule-item"><span class="rule-code r-flag">R4</span><span>ISO file not classified as ISO 27001 cert → FLAGGED</span></div>
+      <div class="rule-item"><span class="rule-code r-flag">R5</span><span>Either file confidence below 85% → FLAGGED</span></div>
+      <div class="rule-item"><span class="rule-code r-pass">R6</span><span>All checks pass → SENT TO ANALYST</span></div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="section-label">// Vendor Information</div>
+    <div class="form-group">
+      <label>Vendor Name <span class="required">*</span></label>
+      <input type="text" id="vendorName" placeholder="e.g. Acme Corp" autocomplete="off"/>
+      <div class="field-error-msg" id="err-vendorName"></div>
+    </div>
+
+    <hr class="divider"/>
+    <div class="section-label">// SIG Questionnaire</div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>SIG Submission Date <span class="required">*</span></label>
+        <input type="date" id="sigDate"/>
+        <div class="field-error-msg" id="err-sigDate"></div>
+      </div>
+      <div class="form-group">
+        <label>Upload SIG File (PDF / Excel) <span class="required">*</span></label>
+        <div class="file-upload-wrapper">
+          <input type="file" class="file-upload-input" id="sigFile" accept=".pdf,.xlsx,.xls"/>
+          <div class="file-upload-display" id="sigFileDisplay">
+            <span class="file-icon" id="sigFileIcon">📄</span>
+            <div class="file-info">
+              <div class="file-placeholder-text" id="sigFilePlaceholder">Click to upload</div>
+              <div class="file-name-text" id="sigFileName" style="display:none"></div>
+            </div>
+            <div class="confidence-badge" id="sigConfBadge">
+              <span class="conf-label">Confidence</span>
+              <span class="conf-value" id="sigConfValue"></span>
+              <span class="conf-pill" id="sigConfPill"></span>
+            </div>
+          </div>
+        </div>
+        <div class="scan-status" id="sigScanStatus"></div>
+        <div class="field-error-msg" id="err-sigFile"></div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+    <div class="section-label">// ISO 27001 Certificate</div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Certificate Expiry Date <span class="required">*</span></label>
+        <input type="date" id="isoExpiry"/>
+        <div class="field-error-msg" id="err-isoExpiry"></div>
+      </div>
+      <div class="form-group">
+        <label>Upload ISO Certificate (PDF) <span class="required">*</span></label>
+        <div class="file-upload-wrapper">
+          <input type="file" class="file-upload-input" id="isoFile" accept=".pdf"/>
+          <div class="file-upload-display" id="isoFileDisplay">
+            <span class="file-icon" id="isoFileIcon">📄</span>
+            <div class="file-info">
+              <div class="file-placeholder-text" id="isoFilePlaceholder">Click to upload</div>
+              <div class="file-name-text" id="isoFileName" style="display:none"></div>
+            </div>
+            <div class="confidence-badge" id="isoConfBadge">
+              <span class="conf-label">Confidence</span>
+              <span class="conf-value" id="isoConfValue"></span>
+              <span class="conf-pill" id="isoConfPill"></span>
+            </div>
+          </div>
+        </div>
+        <div class="scan-status" id="isoScanStatus"></div>
+        <div class="field-error-msg" id="err-isoFile"></div>
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="runEvaluation()">Run Evaluation →</button>
+  </div>
+
+  <!-- Result -->
+  <div class="result" id="result">
+    <div class="result-header" id="resultHeader">
+      <span class="result-status" id="resultStatus"></span>
+      <span class="result-badge" id="resultBadge"></span>
+    </div>
+    <div class="result-body">
+      <div class="stage-breakdown" id="stageBreakdown" style="display:none">
+        <div class="stage-card">
+          <div class="stage-card-label">Stage 1 — Rules Engine</div>
+          <div class="stage-card-value" id="s1Value"></div>
+          <div class="stage-card-detail" id="s1Detail"></div>
+        </div>
+        <div class="stage-card">
+          <div class="stage-card-label">Stage 2 — ML Classifier</div>
+          <div class="stage-card-value" id="s2Value"></div>
+          <div class="stage-card-detail" id="s2Detail"></div>
+        </div>
+      </div>
+      <div class="result-rule" id="resultRule"></div>
+      <div class="result-message-label">// Message to Vendor</div>
+      <div class="result-message" id="resultMessage"></div>
+    </div>
+    <div style="padding:0 24px 20px;background:var(--surface2)">
+      <button class="reset-btn" onclick="resetForm()">← Submit Another Request</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span>Vendor Onboarding Gate v2.0</span>
+    <span>Stage 1: Rules · Stage 2: ML · External Workflow</span>
+  </footer>
+</div>
+
+<script>
+  const API_URL = 'https://viditg2896-vendor-doc-classifier.hf.space/classify';
+  const CONFIDENCE_THRESHOLD = 0.85;
+  const scanResults = { sig: null, iso: null };
+
+  // ── File upload listeners ──────────────────────────────────────────────
+  document.getElementById('sigFile').addEventListener('change', function() {
+    if (this.files && this.files[0]) scanFile('sig', this.files[0]);
+  });
+  document.getElementById('isoFile').addEventListener('change', function() {
+    if (this.files && this.files[0]) scanFile('iso', this.files[0]);
+  });
+
+  async function scanFile(type, file) {
+    const short = file.name.length > 24 ? file.name.substring(0,22)+'…' : file.name;
+    const display    = document.getElementById(type+'FileDisplay');
+    const icon       = document.getElementById(type+'FileIcon');
+    const placeholder= document.getElementById(type+'FilePlaceholder');
+    const nameEl     = document.getElementById(type+'FileName');
+    const confBadge  = document.getElementById(type+'ConfBadge');
+    const confValue  = document.getElementById(type+'ConfValue');
+    const confPill   = document.getElementById(type+'ConfPill');
+    const statusEl   = document.getElementById(type+'ScanStatus');
+    const errEl      = document.getElementById('err-'+type+'File');
+
+    placeholder.style.display = 'none';
+    nameEl.style.display = 'block';
+    nameEl.textContent = short;
+    errEl.textContent = '';
+    scanResults[type] = null;
+
+    display.className = 'file-upload-display scanning';
+    icon.textContent = '⏳';
+    confBadge.className = 'confidence-badge';
+    statusEl.innerHTML = '<div class="scan-spinner"></div><span style="color:var(--flagged)">Classifying document…</span>';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const resp = await fetch(API_URL, { method: 'POST', body: formData });
+      if (!resp.ok) throw new Error('API returned ' + resp.status);
+      const data = await resp.json();
+      scanResults[type] = data;
+
+      const expectedLabel = type === 'sig' ? 'SIG_QUESTIONNAIRE' : 'ISO_27001_CERT';
+      const labelOk = data.label === expectedLabel;
+      const confOk  = data.confidence >= CONFIDENCE_THRESHOLD;
+      const pct     = Math.round(data.confidence * 100) + '%';
+      const friendlyLabel = data.label.replace(/_/g,' ');
+
+      confValue.textContent = pct;
+      confBadge.className = 'confidence-badge visible';
+
+      if (labelOk && confOk) {
+        display.className = 'file-upload-display scan-pass';
+        icon.textContent = '✓';
+        confValue.className = 'conf-value pass';
+        confPill.className = 'conf-pill pass';
+        confPill.textContent = friendlyLabel;
+        statusEl.innerHTML = '<span style="color:var(--analyst)">✓ '+friendlyLabel+' — '+pct+' confidence</span>';
+      } else if (!labelOk) {
+        display.className = 'file-upload-display scan-fail';
+        icon.textContent = '✗';
+        confValue.className = 'conf-value fail';
+        confPill.className = 'conf-pill fail';
+        confPill.textContent = friendlyLabel;
+        statusEl.innerHTML = '<span style="color:var(--denied)">✗ Classified as '+friendlyLabel+' — wrong document type</span>';
+      } else {
+        display.className = 'file-upload-display scan-warn';
+        icon.textContent = '⚠';
+        confValue.className = 'conf-value warn';
+        confPill.className = 'conf-pill warn';
+        confPill.textContent = 'Low confidence';
+        statusEl.innerHTML = '<span style="color:var(--flagged)">⚠ '+friendlyLabel+' — confidence '+pct+' below 85% threshold</span>';
+      }
+    } catch(err) {
+      scanResults[type] = { label:'ERROR', confidence:0, flagged:true, reason:err.message };
+      display.className = 'file-upload-display scan-warn';
+      icon.textContent = '⚠';
+      confBadge.className = 'confidence-badge';
+      statusEl.innerHTML = '<span style="color:var(--flagged)">⚠ Classifier unavailable — will flag for review</span>';
+    }
+  }
+
+  // ── Utilities ──────────────────────────────────────────────────────────
+  function clearErrors() {
+    document.querySelectorAll('.field-error-msg').forEach(el => el.textContent='');
+    document.querySelectorAll('input').forEach(el => el.classList.remove('field-error'));
+  }
+  function setError(id, msg) {
+    const f = document.getElementById(id);
+    if (f) f.classList.add('field-error');
+    const e = document.getElementById('err-'+id);
+    if (e) e.textContent = msg;
+  }
+  function parseDate(s) {
+    if (!s) return null;
+    const d = new Date(s+'T00:00:00');
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function diffMonths(a,b) {
+    return (b.getFullYear()-a.getFullYear())*12 + (b.getMonth()-a.getMonth());
+  }
+
+  // ── Show result ────────────────────────────────────────────────────────
+  function showResult(type, code, ruleText, message, s1, s2) {
+    const labels = { denied:'DENIED', flagged:'FLAGGED FOR REVIEW', analyst:'SENT TO ANALYST', 'validation-error':'VALIDATION ERROR' };
+    document.getElementById('resultHeader').className   = 'result-header '+type;
+    document.getElementById('resultStatus').className   = 'result-status '+type;
+    document.getElementById('resultStatus').textContent = labels[type];
+    document.getElementById('resultBadge').className    = 'result-badge '+type;
+    document.getElementById('resultBadge').textContent  = code;
+    document.getElementById('resultRule').innerHTML     = '<strong>'+code+'</strong> — '+ruleText;
+    document.getElementById('resultMessage').textContent= message;
+
+    const bd = document.getElementById('stageBreakdown');
+    if (s1 && s2) {
+      bd.style.display = 'grid';
+      document.getElementById('s1Value').textContent  = s1.value;
+      document.getElementById('s1Value').className    = 'stage-card-value '+s1.cls;
+      document.getElementById('s1Detail').textContent = s1.detail;
+      document.getElementById('s2Value').textContent  = s2.value;
+      document.getElementById('s2Value').className    = 'stage-card-value '+s2.cls;
+      document.getElementById('s2Detail').textContent = s2.detail;
+    } else { bd.style.display='none'; }
+
+    const r = document.getElementById('result');
+    r.className = 'result visible';
+    r.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  // ── Main evaluation ────────────────────────────────────────────────────
+  async function runEvaluation() {
+    clearErrors();
+    const btn = document.getElementById('submitBtn');
+    if (btn.disabled) return;
+
+    const vendorName    = document.getElementById('vendorName').value.trim();
+    const sigDateStr    = document.getElementById('sigDate').value;
+    const sigFileEl     = document.getElementById('sigFile');
+    const isoExpiryStr  = document.getElementById('isoExpiry').value;
+    const isoFileEl     = document.getElementById('isoFile');
+
+    // Today's date is the submission anchor — vendor doesn't enter it
+    const submissionDate = new Date();
+    submissionDate.setHours(0,0,0,0);
+    const submissionStr  = submissionDate.toISOString().split('T')[0];
+
+    let hasError = false;
+    if (!vendorName) { setError('vendorName','Vendor name is required.'); hasError=true; }
+    if (!sigFileEl.files[0]) { setError('sigFile','SIG questionnaire file is required.'); hasError=true; }
+    const sigDate = parseDate(sigDateStr);
+    if (!sigDateStr) { setError('sigDate','SIG submission date is required.'); hasError=true; }
+    else if (!sigDate) { setError('sigDate','Invalid date format.'); hasError=true; }
+    else if (sigDate > submissionDate) { setError('sigDate','SIG date cannot be in the future.'); hasError=true; }
+    if (!isoFileEl.files[0]) { setError('isoFile','ISO 27001 certificate is required.'); hasError=true; }
+    const isoExpiry = parseDate(isoExpiryStr);
+    if (!isoExpiryStr) { setError('isoExpiry','Certificate expiry date is required.'); hasError=true; }
+    else if (!isoExpiry) { setError('isoExpiry','Invalid date format.'); hasError=true; }
+    if (hasError) return;
+
+    // Stage 1 — Rules
+    if (isoExpiry < submissionDate) {
+      showResult('denied','R1','ISO 27001 certificate was expired at time of submission.',
+        `Dear ${vendorName},\n\nYour onboarding request has been denied. Your ISO 27001 certificate expired on ${isoExpiryStr}, before your submission date of ${submissionStr}.\n\nPlease resubmit with a current ISO 27001 certificate.\n\nRegards,\nVendor Onboarding Team`,
+        {value:'DENIED',cls:'fail',detail:'R1 — ISO certificate expired'},
+        {value:'NOT RUN',cls:'warn',detail:'Stage 1 terminated early'});
+      return;
+    }
+    if (diffMonths(sigDate, submissionDate) > 12) {
+      showResult('denied','R2','SIG questionnaire is more than 12 months old.',
+        `Dear ${vendorName},\n\nYour onboarding request has been denied. Your SIG questionnaire dated ${sigDateStr} is more than 12 months before your submission date of ${submissionStr}.\n\nPlease resubmit with a SIG completed within the last 12 months.\n\nRegards,\nVendor Onboarding Team`,
+        {value:'DENIED',cls:'fail',detail:'R2 — SIG questionnaire expired'},
+        {value:'NOT RUN',cls:'warn',detail:'Stage 1 terminated early'});
+      return;
+    }
+
+    // Stage 2 — ML (run scans if not already done)
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.innerHTML = 'Classifying documents… <div class="loading-bar"></div>';
+
+    if (!scanResults.sig && sigFileEl.files[0]) await scanFile('sig', sigFileEl.files[0]);
+    if (!scanResults.iso && isoFileEl.files[0]) await scanFile('iso', isoFileEl.files[0]);
+
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.innerHTML = 'Run Evaluation →';
+
+    const sigR = scanResults.sig;
+    const isoR = scanResults.iso;
+    const sigPct = sigR ? Math.round(sigR.confidence*100)+'%' : 'N/A';
+    const isoPct = isoR ? Math.round(isoR.confidence*100)+'%' : 'N/A';
+    const s2detail = 'SIG: '+sigPct+' · ISO: '+isoPct;
+
+    // R3
+    if (!sigR || sigR.label !== 'SIG_QUESTIONNAIRE') {
+      const actual = sigR ? sigR.label.replace(/_/g,' ') : 'UNKNOWN';
+      showResult('flagged','R3','SIG file was not classified as a SIG Questionnaire.',
+        `Dear ${vendorName},\n\nYour submission has been flagged. The file uploaded as your SIG Questionnaire was classified as "${actual}". This may indicate the wrong file was attached.\n\nAn analyst will review your submission.\n\nRegards,\nVendor Onboarding Team`,
+        {value:'PASSED',cls:'pass',detail:'R1 + R2 — Dates valid'},
+        {value:'FLAGGED',cls:'warn',detail:'R3 — SIG classified as '+actual});
+      return;
+    }
+    // R4
+    if (!isoR || isoR.label !== 'ISO_27001_CERT') {
+      const actual = isoR ? isoR.label.replace(/_/g,' ') : 'UNKNOWN';
+      showResult('flagged','R4','ISO file was not classified as an ISO 27001 Certificate.',
+        `Dear ${vendorName},\n\nYour submission has been flagged. The file uploaded as your ISO 27001 Certificate was classified as "${actual}". This may indicate the wrong file was attached.\n\nAn analyst will review your submission.\n\nRegards,\nVendor Onboarding Team`,
+        {value:'PASSED',cls:'pass',detail:'R1 + R2 — Dates valid'},
+        {value:'FLAGGED',cls:'warn',detail:'R4 — ISO classified as '+actual});
+      return;
+    }
+    // R5
+    if (sigR.confidence < CONFIDENCE_THRESHOLD || isoR.confidence < CONFIDENCE_THRESHOLD) {
+      const lowDoc = sigR.confidence < CONFIDENCE_THRESHOLD
+        ? 'SIG questionnaire ('+Math.round(sigR.confidence*100)+'%)'
+        : 'ISO 27001 certificate ('+Math.round(isoR.confidence*100)+'%)';
+      showResult('flagged','R5','Document type confirmed but confidence is below the 85% threshold.',
+        `Dear ${vendorName},\n\nYour submission has been flagged. Your ${lowDoc} was identified as the correct document type but with lower than required confidence. This may be due to unusual document formatting.\n\nAn analyst will review before your submission proceeds.\n\nRegards,\nVendor Onboarding Team`,
+        {value:'PASSED',cls:'pass',detail:'R1 + R2 — Dates valid'},
+        {value:'FLAGGED',cls:'warn',detail:'R5 — '+s2detail});
+      return;
+    }
+    // R6 — all clear
+    showResult('analyst','R6','All checks passed. Documents verified by both stages.',
+      `Dear ${vendorName},\n\nThank you for submitting your onboarding request. Your documents have passed all automated screening checks and have been forwarded to our risk team for final review.\n\nA member of our team will be in touch shortly.\n\nRegards,\nVendor Onboarding Team`,
+      {value:'PASSED',cls:'pass',detail:'R1 + R2 — Dates valid'},
+      {value:'PASSED',cls:'pass',detail:'R6 — '+s2detail});
+  }
+
+  // ── Reset ──────────────────────────────────────────────────────────────
+  function resetForm() {
+    ['vendorName','sigDate','isoExpiry'].forEach(id => document.getElementById(id).value='');
+    ['sigFile','isoFile'].forEach(id => document.getElementById(id).value='');
+    ['sig','iso'].forEach(type => {
+      scanResults[type] = null;
+      document.getElementById(type+'FileDisplay').className = 'file-upload-display';
+      document.getElementById(type+'FileIcon').textContent = '📄';
+      document.getElementById(type+'FilePlaceholder').style.display = 'block';
+      document.getElementById(type+'FileName').style.display = 'none';
+      document.getElementById(type+'FileName').textContent = '';
+      document.getElementById(type+'ConfBadge').className = 'confidence-badge';
+      document.getElementById(type+'ScanStatus').innerHTML = '';
+    });
+    clearErrors();
+    document.getElementById('result').className = 'result';
+    document.getElementById('submitBtn').innerHTML = 'Run Evaluation →';
+    document.getElementById('submitBtn').disabled = false;
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+</script>
+</body>
+</html>

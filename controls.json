@@ -1,0 +1,136 @@
+{
+  "controls": [
+    {
+      "control_id": "ENC-002",
+      "control_name": "Encryption at Rest",
+      "description": "All data at rest — including databases, file storage, and backup volumes — must be encrypted using an approved algorithm (AES-256 or equivalent). This applies to cloud-hosted storage (AWS S3, Azure Blob, GCP Cloud Storage) and on-premises servers alike.",
+      "framework": "ISO 27001 A.10.1.1 / NIST SP 800-111",
+      "what_good_evidence_looks_like": [
+        "AWS S3: Screenshot of the S3 bucket Properties tab showing 'Default encryption' section with 'Server-side encryption' set to 'Enabled' and algorithm showing 'SSE-S3 (AES-256)' or 'SSE-KMS'",
+        "AWS RDS: Screenshot of the RDS database instance details showing 'Encryption' field set to 'Enabled' with a KMS Key ID visible",
+        "Azure Blob: Screenshot of the Azure Storage Account showing 'Encryption' blade with 'Encryption type' set to 'Microsoft-managed keys' or 'Customer-managed keys' and status showing 'Enabled'",
+        "Azure SQL: Screenshot of Azure SQL Database showing 'Transparent Data Encryption' set to 'On'",
+        "GCP: Screenshot of Google Cloud Storage bucket details showing 'Encryption type' as 'Google-managed key' or 'Customer-managed key (CMEK)'",
+        "On-premises Linux: Terminal output of 'lsblk -o NAME,FSTYPE,SIZE,MOUNTPOINT,LABEL' or 'cryptsetup status' showing LUKS encryption active on storage volumes",
+        "On-premises Windows: Screenshot of BitLocker Drive Encryption control panel showing drives with 'BitLocker On' status, or PowerShell output of 'Get-BitLockerVolume' showing ProtectionStatus as 'On'",
+        "A system-generated encryption status report from a security tool (e.g. Qualys, Tenable, Prisma Cloud) showing encryption enabled across all in-scope storage resources",
+        "Evidence clearly identifies the specific buckets, volumes, or databases in scope and shows encryption is enabled on all of them, not just a subset"
+      ],
+      "what_insufficient_evidence_looks_like": [
+        "A company security policy or procedure document stating that encryption is required — this shows intent, not implementation",
+        "A screenshot of encryption settings for only one bucket or volume when multiple are in scope",
+        "A screenshot showing encryption is 'available' or 'supported' but not confirmed as enabled",
+        "An email or written statement from the vendor claiming encryption is in place without system-generated proof",
+        "A screenshot of a different environment (e.g. dev or staging) rather than production",
+        "A compliance certificate (SOC 2, ISO 27001) alone — these confirm a programme exists but do not prove encryption is active on specific systems",
+        "A screenshot where the encryption status field is blank, loading, or not visible",
+        "Terminal output that shows a disk is mounted but does not confirm the underlying encryption status"
+      ],
+      "few_shot_examples": [
+        {
+          "evidence_description": "Screenshot of AWS S3 console showing the Properties tab of a bucket named 'prod-customer-data' with Default Encryption showing SSE-S3 enabled with AES-256 algorithm. Screenshot is dated this month.",
+          "verdict": "SUFFICIENT",
+          "reasoning": "Directly demonstrates AES-256 server-side encryption is enabled on the named production bucket with a recent timestamp confirming current state."
+        },
+        {
+          "evidence_description": "Screenshot of AWS S3 bucket list showing three buckets. The encryption column shows 'Enabled' for two buckets but the third bucket named 'prod-archive' shows 'Not enabled'.",
+          "verdict": "INSUFFICIENT",
+          "reasoning": "Evidence shows encryption is not universally applied — one production bucket explicitly shows encryption is not enabled, which directly violates the control requirement."
+        },
+        {
+          "evidence_description": "The vendor's Information Security Policy document (PDF, 18 pages) with a section titled 'Data Encryption Standards' stating all production data must be encrypted at rest using AES-256.",
+          "verdict": "INSUFFICIENT",
+          "reasoning": "Policy document demonstrates the requirement exists but provides no system-generated proof that encryption is actually configured and active on production systems."
+        },
+        {
+          "evidence_description": "Terminal screenshot showing output of 'cryptsetup status /dev/sda1' on a Linux server. Output shows: type luks2, cipher aes-xts-plain64, keysize 512 bits, device /dev/sda1, status: active.",
+          "verdict": "SUFFICIENT",
+          "reasoning": "System-generated terminal output directly confirms LUKS2 encryption with AES-256 equivalent cipher is active on the production storage volume."
+        },
+        {
+          "evidence_description": "Screenshot of Azure portal showing the Storage Account overview page. The page shows account name, location, and subscription details but the Encryption section is not visible or has not been navigated to.",
+          "verdict": "INSUFFICIENT",
+          "reasoning": "Screenshot does not show the encryption configuration — the analyst cannot confirm whether encryption is enabled from the information displayed."
+        },
+        {
+          "evidence_description": "PowerShell output showing: Get-BitLockerVolume results with C: drive ProtectionStatus 'On', VolumeStatus 'FullyEncrypted', EncryptionMethod 'XtsAes256'. D: drive ProtectionStatus 'On', VolumeStatus 'FullyEncrypted'.",
+          "verdict": "SUFFICIENT",
+          "reasoning": "System-generated PowerShell output confirms BitLocker with AES-256 encryption is fully active on all listed drives on the production Windows server."
+        }
+      ],
+      "escalation_triggers": [
+        "Evidence covers some but not all storage systems in scope — partial compliance is ambiguous",
+        "Encryption is shown as enabled but the algorithm is not AES-256 or equivalent (e.g. DES, 3DES, RC4)",
+        "Screenshot appears to be from a non-production environment",
+        "Vendor claims on-premises encryption but evidence is unclear or partially visible"
+      ]
+    },
+    {
+      "control_id": "NTP-007",
+      "control_name": "NTP Time Synchronisation",
+      "description": "All production systems must synchronise their clocks with a reliable, authoritative NTP (Network Time Protocol) source. Accurate time synchronisation is critical for security log integrity, certificate validation, and forensic investigations. Systems must show active synchronisation with a reachable NTP server and a time offset within acceptable bounds (typically ±128ms).",
+      "framework": "ISO 27001 A.12.4.4 / CIS Controls v8 8.4",
+      "what_good_evidence_looks_like": [
+        "Linux (chrony): Terminal output of 'chronyc tracking' showing 'Reference ID' as a named NTP server (not 'LOCAL'), 'System time offset' within ±128ms, and 'Leap status' as 'Normal'",
+        "Linux (chrony): Terminal output of 'chronyc sources -v' showing at least one NTP source with a '*' (asterisk) prefix indicating it is the currently selected and synced source",
+        "Linux (timedatectl): Terminal output of 'timedatectl status' showing 'NTP service: active' and 'System clock synchronized: yes'",
+        "Linux (ntpq): Terminal output of 'ntpq -p' showing at least one server row with an asterisk (*) in the first column indicating the active sync peer, with offset and jitter values shown",
+        "Windows: Screenshot of 'w32tm /query /status' output showing 'Source' as a named NTP server (not 'Local CMOS Clock'), 'Stratum' as 2 or lower, and 'Last Successful Sync Time' within the last hour",
+        "Windows: Screenshot of 'w32tm /query /peers' showing configured NTP peers with reachability confirmed",
+        "Network device (Cisco): Output of 'show ntp status' showing 'Clock is synchronized' and 'reference is' a named upstream NTP server, plus 'show ntp associations' showing a peer marked with an asterisk",
+        "Network device (Juniper): Output of 'show ntp status' showing 'status: synchronized' and 'reference' pointing to a valid NTP server address",
+        "Cloud provider: Screenshot of AWS Systems Manager or Azure Monitor showing NTP sync status across a fleet of instances",
+        "Evidence should show the hostname or IP of the system alongside the NTP sync status to confirm it is a production system"
+      ],
+      "what_insufficient_evidence_looks_like": [
+        "Terminal output showing NTP is configured in a config file (e.g. /etc/chrony.conf) but no evidence that the service is actively running and synchronised",
+        "'timedatectl' output showing 'NTP service: inactive' or 'System clock synchronized: no'",
+        "chronyc output showing no sources with an asterisk — all sources showing '?' or 'x' prefix indicating they are unreachable or rejected",
+        "'w32tm /query /status' showing 'Source: Local CMOS Clock' — this means the system is not synchronising with any external NTP server",
+        "A screenshot of NTP server configuration settings only, without confirmation the service is running and the clock is actively synchronised",
+        "Output showing time offset greater than ±128ms or ±1 second — indicates synchronisation is failing or degraded",
+        "A network diagram or architecture document showing NTP servers exist in the environment without system-level proof of active sync",
+        "A policy document stating NTP synchronisation is required",
+        "Screenshot from only one system when multiple production systems are in scope"
+      ],
+      "few_shot_examples": [
+        {
+          "evidence_description": "Terminal screenshot showing 'chronyc tracking' output on a Linux server. Reference ID shows 'time.google.com', System time offset shows '+0.000021453 seconds', RMS offset '0.000018234 seconds', Leap status 'Normal'.",
+          "verdict": "SUFFICIENT",
+          "reasoning": "chronyc tracking output directly confirms the system is actively synchronised with a named external NTP server (Google) with a time offset well within acceptable bounds."
+        },
+        {
+          "evidence_description": "Screenshot of /etc/chrony.conf file showing 'server time.cloudflare.com iburst' and 'server time.google.com iburst' configured as NTP sources.",
+          "verdict": "INSUFFICIENT",
+          "reasoning": "Configuration file confirms NTP servers are defined but provides no evidence the chrony service is running or that the system clock is currently synchronised with these sources."
+        },
+        {
+          "evidence_description": "Windows Server screenshot showing output of 'w32tm /query /status'. Source: time.windows.com, Stratum: 3, Last Successful Sync Time: 3/4/2026 09:12:33 AM (less than 1 hour ago), Poll Interval: 1024s.",
+          "verdict": "SUFFICIENT",
+          "reasoning": "w32tm output confirms the Windows server is actively synchronised with an external NTP source with a recent successful sync timestamp confirming current active synchronisation."
+        },
+        {
+          "evidence_description": "Terminal output of 'ntpq -p' on a Linux server. All server rows show '?' in the first column with 'reach' column showing 0 for all entries.",
+          "verdict": "INSUFFICIENT",
+          "reasoning": "All NTP peers show as unreachable (reach=0) and no asterisk is present indicating an active sync source. The system clock is not currently synchronised with any NTP server."
+        },
+        {
+          "evidence_description": "Cisco router output of 'show ntp status' showing: 'Clock is synchronized, stratum 2, reference is 216.239.35.0' and 'show ntp associations' showing 216.239.35.0 with asterisk prefix and reach 377.",
+          "verdict": "SUFFICIENT",
+          "reasoning": "Cisco NTP status output directly confirms clock synchronisation at stratum 2 with full reachability (377) to the upstream NTP server, satisfying the control requirement."
+        },
+        {
+          "evidence_description": "timedatectl output showing: 'Local time: Wed 2026-03-04 09:45:12 UTC', 'NTP service: inactive', 'System clock synchronized: no'.",
+          "verdict": "INSUFFICIENT",
+          "reasoning": "timedatectl explicitly shows NTP service is inactive and the system clock is not synchronised, directly confirming the control is not in place."
+        }
+      ],
+      "escalation_triggers": [
+        "System is synchronised but stratum is unusually high (5 or above) suggesting a degraded or unreliable time source",
+        "Time offset is between 128ms and 1 second — borderline acceptable, warrants human review",
+        "Evidence covers only one system but vendor claims NTP is configured across a large fleet — spot check may be insufficient",
+        "NTP source is an internal server — acceptable only if that server is itself synchronised to an external stratum 1 or 2 source, which is not shown in the evidence"
+      ]
+    }
+  ]
+}
