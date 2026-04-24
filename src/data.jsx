@@ -24,6 +24,7 @@ const marqueeItems = [
   { label: "Tableau", logo: "public/tool-logos/tableau.svg" },
   { label: "Power BI", logo: "public/tool-logos/powerbi.svg" },
   { label: "MS Office", logo: "public/tool-logos/microsoft365.svg" },
+  { label: "Claude", logo: "public/tool-logos/claude.svg" },
   { label: "n8n", logo: "public/tool-logos/n8n.svg" },
   { label: "Zapier", logo: "public/tool-logos/zapier.svg" },
 ];
