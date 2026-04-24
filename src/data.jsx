@@ -4,9 +4,9 @@
 
 const personal = {
   name: "Sparsh Garg",
-  email: "sparshg1618@gmail.com",
-  linkedin: "https://www.linkedin.com/in/sparshg1618/",
-  github: "https://github.com/sparshg1618",
+  email: "sparshg9@uw.edu",
+  linkedin: "https://www.linkedin.com/in/sparshgarg98/",
+  github: "https://github.com/sparshgarg",
 };
 
 const taglineOptions = [
@@ -23,7 +23,6 @@ const marqueeItems = [
   { label: "SQL", monogram: "SQL" },
   { label: "Tableau", logo: "public/tool-logos/tableau.svg" },
   { label: "Power BI", logo: "public/tool-logos/powerbi.svg" },
-  { label: "Claude", logo: "public/tool-logos/claude.svg" },
   { label: "MS Office", logo: "public/tool-logos/microsoft365.svg" },
   { label: "n8n", logo: "public/tool-logos/n8n.svg" },
   { label: "Zapier", logo: "public/tool-logos/zapier.svg" },

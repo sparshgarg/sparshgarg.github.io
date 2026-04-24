@@ -191,7 +191,7 @@ function Contact() {
           </div>
         </div>
         <footer>
-          <div>© 2026 Sparsh Garg · built from scratch, deployed via GitHub Actions</div>
+          <div>© 2026 Sparsh Garg · built from scratch, deployed via GitHub</div>
           <div>sparshgarg.github.io</div>
         </footer>
       </div>
