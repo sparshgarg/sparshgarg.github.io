@@ -116,9 +116,6 @@ function ExperienceCard({x, i}) {
         <div className="xp-co">{x.company}</div>
         <h3 className="xp-role">{x.role}</h3>
         <div className="xp-team">{x.team}</div>
-        <ul>
-          {x.bullets.map((b, j) => <li key={j}>{b}</li>)}
-        </ul>
         <div className="xp-tags">
           {x.tags.map(t => <span className="xp-tag" key={t}>{t}</span>)}
         </div>
@@ -128,8 +125,8 @@ function ExperienceCard({x, i}) {
 }
 
 function ExperienceLogo({logo}) {
-  if (logo === "aws") return <div className="xp-logo-tile"><img src="public/aws-logo-new.svg" alt="AWS" /></div>;
-  if (logo === "amex") return <div className="xp-logo-tile"><img src="public/amex-logo-new.svg" alt="Amex" /></div>;
+  if (logo === "aws") return <div className="xp-logo-tile"><img src="public/Amazon-Web-Services-Emblem.png" alt="AWS" /></div>;
+  if (logo === "amex") return <div className="xp-logo-tile"><img src="public/American_express_logo_shorthand.svg" alt="Amex" /></div>;
   if (logo === "foodclub") return (
     <div className="xp-logo-tile dark" style={{color: "#FF7A5A"}}>
       <svg width="40" height="40" viewBox="0 0 40 40">

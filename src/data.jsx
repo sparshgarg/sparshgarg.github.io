@@ -102,7 +102,7 @@ const projects = [
 const experiences = [
   {
     company: "Amazon Web Services",
-    role: "Technical Product Manager (Intern)",
+    role: "Sr.Product Manager - Technical, External Services (Intern)",
     team: "EC2 · Networking",
     period: "Summer 2025",
     logo: "aws",
@@ -111,7 +111,7 @@ const experiences = [
       "Partnered with eng, SAs, and security to take the feature from proposal to closed beta in 12 weeks.",
       "Ran 8 customer discovery calls; reframed the roadmap around a new SMB segment.",
     ],
-    tags: ["PM", "Networking", "Cloud", "AWS"],
+    tags: ["PM", "Networking", "Cloud", "AWS", "EC2", "PR/FAQ"],
   },
   {
     company: "American Express",
@@ -124,11 +124,11 @@ const experiences = [
       "Led migration of a legacy batch scoring pipeline to streaming; cut cost $1.2M/yr and halved SLA breaches.",
       "Mentored 6 engineers across 2 squads; ran the on-call rotation and incident review practice.",
     ],
-    tags: ["Payments", "Java", "Kafka", "PM", "Risk"],
+    tags: ["Payments", "Data Visualization", "Markting", "Big Data Analytics", "Automation Pipelines", "Risk Management"],
   },
   {
     company: "FoodClub",
-    role: "Product Engineer",
+    role: "Co-Founder",
     team: "Growth",
     period: "2018 — 2019",
     logo: "foodclub",
