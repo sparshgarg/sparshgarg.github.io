@@ -1,4 +1,4 @@
-/* global React, Logo, personal, experiences, skills, marqueeItems, numbers */
+/* global React, Logo, personal, experiences, skills, marqueeItems */
 const { useState, useEffect, useRef } = React;
 
 // ── Navbar ─────────────────────────────────────────────────────────────
@@ -58,32 +58,6 @@ function Marquee() {
   );
 }
 
-// ── Numbers ────────────────────────────────────────────────────────────
-function Numbers() {
-  return (
-    <section id="numbers">
-      <div className="wrap">
-        <div className="sec-head reveal">
-          <div className="sec-head-left">
-            <div className="sec-head-no">// 02 — impact at a glance</div>
-            <h2 className="gradient-text">Numbers, not adjectives.</h2>
-            <p>The receipts from four years of shipping at Amex, AWS, and a few things in between.</p>
-          </div>
-          <div className="sec-head-right">scroll ↓</div>
-        </div>
-        <div className="num-grid reveal">
-          {numbers.map((n, i) => (
-            <div className="num" key={i}>
-              <div className="num-val">{n.val}<span className="unit">{n.unit}</span></div>
-              <div className="num-label">{n.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ── Experience ─────────────────────────────────────────────────────────
 function Experience() {
   return (
@@ -91,15 +65,14 @@ function Experience() {
       <div className="wrap">
         <div className="sec-head reveal">
           <div className="sec-head-left">
-            <div className="sec-head-no">// 03 — experience</div>
-            <h2 className="gradient-text">Shipped across cloud, payments, and a startup.</h2>
-            <p>The short version — with the receipts baked in.</p>
+            <div className="sec-head-no">// 02 — experience</div>
+            <h2 className="gradient-text">My Journey</h2>
           </div>
-          <div className="sec-head-right">3 chapters</div>
+          <div className="sec-head-right">{experiences.length} stops</div>
         </div>
-        <div className="xp-list">
+        <ol className="xp-timeline">
           {experiences.map((x, i) => <ExperienceCard key={i} x={x} i={i} />)}
-        </div>
+        </ol>
       </div>
     </section>
   );
@@ -107,34 +80,33 @@ function Experience() {
 
 function ExperienceCard({x, i}) {
   return (
-    <article className="xp-card reveal" style={{ transitionDelay: `${i*0.06}s` }}>
-      <div className="xp-left">
-        <ExperienceLogo logo={x.logo} />
-        <div className="xp-period">{x.period}</div>
+    <li className="xp-row reveal" style={{ transitionDelay: `${i*0.07}s` }}>
+      <div className="xp-rail">
+        <span className="xp-dot" />
       </div>
-      <div className="xp-right">
-        <div className="xp-co">{x.company}</div>
-        <h3 className="xp-role">{x.role}</h3>
-        <div className="xp-team">{x.team}</div>
-        <div className="xp-tags">
-          {x.tags.map(t => <span className="xp-tag" key={t}>{t}</span>)}
+      <article className="xp-card">
+        <div className="xp-left">
+          <ExperienceLogo logo={x.logo} />
+          <div className="xp-period">{x.period}</div>
         </div>
-      </div>
-    </article>
+        <div className="xp-right">
+          <div className="xp-co">{x.company}</div>
+          <h3 className="xp-role">{x.role}</h3>
+          <div className="xp-team">{x.team}</div>
+          <div className="xp-tags">
+            {x.tags.map(t => <span className="xp-tag" key={t}>{t}</span>)}
+          </div>
+        </div>
+      </article>
+    </li>
   );
 }
 
 function ExperienceLogo({logo}) {
   if (logo === "aws") return <div className="xp-logo-tile"><img src="public/Amazon-Web-Services-Emblem.png" alt="AWS" /></div>;
   if (logo === "amex") return <div className="xp-logo-tile"><img src="public/American_express_logo_shorthand.svg" alt="Amex" /></div>;
-  if (logo === "foodclub") return (
-    <div className="xp-logo-tile dark" style={{color: "#FF7A5A"}}>
-      <svg width="40" height="40" viewBox="0 0 40 40">
-        <circle cx="20" cy="20" r="16" stroke="#FF7A5A" strokeWidth="2" fill="none"/>
-        <text x="20" y="25" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="14" fontWeight="700" fill="#FF7A5A">FC</text>
-      </svg>
-    </div>
-  );
+  if (logo === "uw")   return <div className="xp-logo-tile"><img src="public/cropped-UW-logo-512.png" alt="University of Washington" /></div>;
+  if (logo === "pec")  return <div className="xp-logo-tile"><img src="public/pec-logo.png" alt="Punjab Engineering College" /></div>;
   return null;
 }
 
@@ -179,9 +151,8 @@ function Contact() {
             <a className="contact-channel" href={personal.github} target="_blank" rel="noopener">{`{ }`} github</a>
             <a
               className="contact-channel"
-              href="https://drive.google.com/file/d/1eLsWOmos6v5EtaRCwG1BZP_O-74FDr1-/view?usp=sharing"
-              target="_blank"
-              rel="noopener"
+              href="public/Sparsh_Garg_Resume.pdf"
+              download="Sparsh_Garg_Resume.pdf"
             >
               ↓ resume.pdf
             </a>
@@ -196,4 +167,4 @@ function Contact() {
   );
 }
 
-Object.assign(window, { Navbar, Marquee, Numbers, Experience, Skills, Contact });
+Object.assign(window, { Navbar, Marquee, Experience, Skills, Contact });

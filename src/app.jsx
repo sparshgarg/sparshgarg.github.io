@@ -1,5 +1,5 @@
 /* global React, ReactDOM, personal, Logo,
-   Navbar, Marquee, Numbers, Experience, Contact, Projects */
+   Navbar, Marquee, Experience, Contact, Projects */
 
 const { useEffect, useMemo, useRef, useState } = React;
 
@@ -44,9 +44,9 @@ function Hero() {
         <div className="hero-meta">
           <span>◇ Seattle, WA</span>
           <span className="dot" />
-          <span>◇ prev. AWS · Amex · FoodClub</span>
+          <span>◇ prev. AWS · Amex</span>
           <span className="dot" />
-          <span>◇ shipping since 2019</span>
+          <span>◇ shipping since 2020</span>
         </div>
         <div className="hero-ctas">
           <a className="btn btn-primary" href="#work">
@@ -94,10 +94,16 @@ function Hero() {
             <div className="hero-portrait-tag">
               <span className="pulse-dot" /> sparsh.garg
             </div>
-            <div className="hero-portrait-scribble">hi, I'm sparsh →</div>
+            {/* <div className="hero-portrait-scribble">hi, I'm sparsh →</div> */}
           </div>
         </div>
       </div>
+      <a href="#work" className="scroll-cue" aria-label="Scroll to work">
+        <span>scroll</span>
+        <svg width="14" height="22" viewBox="0 0 14 22" fill="none">
+          <path d="M7 1 L7 17 M2 12 L7 17 L12 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </a>
     </section>
   );
 }
@@ -128,7 +134,6 @@ function App() {
       <Hero />
       <Marquee />
       <Projects />
-      <Numbers />
       <Experience />
       <Contact />
     </>
